@@ -9,6 +9,7 @@ pub mod sol_lottery {
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         Ok(())
     }
+
 }
 
 #[derive(Accounts)]

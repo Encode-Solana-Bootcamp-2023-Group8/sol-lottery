@@ -12,7 +12,7 @@ const Home: NextPage = (props) => {
           content="Solana Scaffold"
         />
       </Head>
-      <HomeView />
+      {/* <HomeView /> */}
     </div>
   );
 };
