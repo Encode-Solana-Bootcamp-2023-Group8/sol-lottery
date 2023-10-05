@@ -1,5 +1,5 @@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, PublicKey, Transaction, TransactionInstruction, TransactionSignature, sendAndConfirmTransaction } from '@solana/web3.js';
+import { Keypair, LAMPORTS_PER_SOL, PublicKey, Transaction, TransactionInstruction, TransactionSignature, sendAndConfirmTransaction } from '@solana/web3.js';
 import { FC, useCallback } from 'react';
 import { notify } from "../utils/notifications";
 import useUserSOLBalanceStore from '../stores/useUserSOLBalanceStore';
@@ -10,21 +10,24 @@ export const StartGame: FC = () => {
     const { publicKey } = useWallet();
     const { getUserSOLBalance } = useUserSOLBalanceStore();
     const programId = new PublicKey('3w5QAVGCLEBgxN1wJ2C19UuykJuJNVHTtC8uvZQ8JcAc'); // Replace with your program's ID
+    // const wallet = new Keypair.fromSecretKey();
 
+    
+    const lotteryAccount = new Keypair();
     async function createLottery(ticketPrice) {      
         // Define the instruction to call the create_lottery function
         const instruction = new TransactionInstruction({
           programId,
           keys: [
             { pubkey: publicKey, isSigner: true, isWritable: false },
-            // { pubkey: lotteryAccount.publicKey, isSigner: false, isWritable: true },
+            { pubkey: lotteryAccount.publicKey, isSigner: false, isWritable: true },
           ],
-          data: Buffer.from([0, ...ticketPrice.toBuffer()]), // Assuming create_lottery has an instruction index of 0
+          data: Buffer.from([0, ticketPrice]), // Assuming create_lottery has an instruction index of 0
         });
       
         // Create and send the transaction
         const transaction = new Transaction().add(instruction);
-        await sendAndConfirmTransaction(connection, transaction, []);
+        await sendAndConfirmTransaction(connection, transaction, [lotteryAccount]);
       
         console.log('Lottery created successfully!');
       }
