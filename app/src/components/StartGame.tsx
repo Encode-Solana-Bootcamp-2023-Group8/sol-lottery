@@ -1,13 +1,34 @@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, TransactionSignature } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, PublicKey, Transaction, TransactionInstruction, TransactionSignature, sendAndConfirmTransaction } from '@solana/web3.js';
 import { FC, useCallback } from 'react';
 import { notify } from "../utils/notifications";
 import useUserSOLBalanceStore from '../stores/useUserSOLBalanceStore';
+import { Provider,} from "@project-serum/anchor";
 
 export const StartGame: FC = () => {
     const { connection } = useConnection();
     const { publicKey } = useWallet();
     const { getUserSOLBalance } = useUserSOLBalanceStore();
+    const programId = new PublicKey('3w5QAVGCLEBgxN1wJ2C19UuykJuJNVHTtC8uvZQ8JcAc'); // Replace with your program's ID
+
+    async function createLottery(ticketPrice) {      
+        // Define the instruction to call the create_lottery function
+        const instruction = new TransactionInstruction({
+          programId,
+          keys: [
+            { pubkey: publicKey, isSigner: true, isWritable: false },
+            // { pubkey: lotteryAccount.publicKey, isSigner: false, isWritable: true },
+          ],
+          data: Buffer.from([0, ...ticketPrice.toBuffer()]), // Assuming create_lottery has an instruction index of 0
+        });
+      
+        // Create and send the transaction
+        const transaction = new Transaction().add(instruction);
+        await sendAndConfirmTransaction(connection, transaction, []);
+      
+        console.log('Lottery created successfully!');
+      }
+
 
     const onClick = useCallback(async () => {
         if (!publicKey) {
@@ -19,18 +40,10 @@ export const StartGame: FC = () => {
         let signature: TransactionSignature = '';
 
         try {
-            signature = await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL);
-
-            // Get the lates block hash to use on our transaction and confirmation
-            let latestBlockhash = await connection.getLatestBlockhash()
-            await connection.confirmTransaction({ signature, ...latestBlockhash }, 'confirmed');
-
-            notify({ type: 'success', message: 'Airdrop successful!', txid: signature });
-
-            getUserSOLBalance(publicKey, connection);
+            await createLottery(1000000000);
         } catch (error: any) {
-            notify({ type: 'error', message: `Airdrop failed!`, description: error?.message, txid: signature });
-            console.log('error', `Airdrop failed! ${error?.message}`, signature);
+            notify({ type: 'error', message: `Lottery creation failed!`, description: error?.message, txid: signature });
+            console.log('error', `Lottery creation failed! ${error?.message}`, signature);
         }
     }, [publicKey, connection, getUserSOLBalance]);
 
